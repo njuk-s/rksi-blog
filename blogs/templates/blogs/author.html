@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ author.username }} · {{ block.super }}{% endblock %}
+
+{% block page_header %}
+<div class="page-head">
+  <div>
+    <h1>{% if author == user %}Мои публикации{% else %}Автор {{ author.username }}{% endif %}</h1>
+    <p class="lead">Публикаций: {{ page_obj.paginator.count }}{% if author == user %} (с черновиками){% endif %}</p>
+  </div>
+  {% if author == user %}<a class="btn btn-primary" href="{% url 'blogs:new' %}">✎ Новая публикация</a>{% endif %}
+</div>
+{% endblock page_header %}
+
+{% block content %}
+<div class="row"><div class="col-lg-8">
+  {% for post in posts %}
+    {% include 'blogs/_post_card.html' %}
+  {% empty %}
+    <div class="empty">
+      <span class="icon" aria-hidden="true">✒️</span>
+      <p class="mb-0">{% if author == user %}Вы ещё ничего не написали.{% else %}У автора пока нет публикаций.{% endif %}</p>
+    </div>
+  {% endfor %}
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-center mt-4">{% bootstrap_pagination page_obj %}</div>
+  {% endif %}
+</div></div>
+{% endblock content %}

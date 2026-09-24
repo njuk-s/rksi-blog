@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{% if is_new %}Новая публикация{% else %}Редактирование{% endif %} · {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="card form-card post-form mx-auto">
+  <div class="card-body p-4">
+    <h1 class="h3 mb-4">{% if is_new %}Новая публикация{% else %}Редактирование публикации{% endif %}</h1>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% bootstrap_form form %}
+      <div class="d-flex flex-wrap">
+        {% if is_new %}
+          <button type="submit" name="action" value="publish" class="btn btn-primary mr-2 mb-2">Опубликовать</button>
+          <button type="submit" name="action" value="draft" class="btn btn-outline-secondary mr-2 mb-2">Сохранить черновик</button>
+          <a class="btn btn-link mb-2" href="{% url 'blogs:index' %}">Отмена</a>
+        {% else %}
+          <button type="submit" name="action" value="save" class="btn btn-primary mr-2 mb-2">Сохранить</button>
+          {% if post.is_published %}
+            <button type="submit" name="action" value="draft" class="btn btn-outline-secondary mr-2 mb-2">Снять в черновики</button>
+          {% else %}
+            <button type="submit" name="action" value="publish" class="btn btn-outline-primary mr-2 mb-2">Опубликовать</button>
+          {% endif %}
+          <a class="btn btn-link mb-2" href="{% url 'blogs:detail' post.id %}">Отмена</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock content %}

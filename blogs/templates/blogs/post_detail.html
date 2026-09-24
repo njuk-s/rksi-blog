@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ post.title }} · {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row"><div class="col-lg-8">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0 mb-2">
+      <li class="breadcrumb-item"><a href="{% url 'blogs:index' %}">Все публикации</a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page">{{ post.title }}</li>
+    </ol>
+  </nav>
+
+  <article class="card post-card mb-4{% if not post.is_published %} is-draft{% endif %}">
+    <div class="card-body p-4 p-md-5">
+      {% if not post.is_published %}<span class="badge badge-secondary mb-2">✎ Черновик - видите только вы</span>{% endif %}
+      <h1 class="post-title mb-2">{{ post.title }}</h1>
+      <div class="meta mb-4">
+        <a class="author-link" href="{% url 'blogs:author' post.owner.username %}">👤 {{ post.owner.username }}</a>
+        · <time datetime="{{ post.date_added|date:'c' }}">{{ post.date_added|date:"j E Y, H:i" }}</time>
+        {% if post.was_edited %}· изменено {{ post.date_modified|date:"j E Y, H:i" }}{% endif %}
+      </div>
+      <div class="post-body">{{ post.text|linebreaks }}</div>
+
+      {% if post.owner == user %}
+        <hr>
+        <div class="d-flex flex-wrap">
+          <a class="btn btn-outline-primary mr-2 mb-2" href="{% url 'blogs:edit' post.id %}">✎ Редактировать</a>
+          <a class="btn btn-outline-danger mb-2" href="{% url 'blogs:delete' post.id %}">Удалить</a>
+        </div>
+      {% endif %}
+    </div>
+  </article>
+
+  {% if post.is_published %}
+  <section id="comments" class="mb-5">
+    <h2 class="h5 mb-3">Комментарии ({{ comments|length }})</h2>
+    {% for comment in comments %}
+      <div class="card comment mb-2" id="comment-{{ comment.id }}">
+        <div class="card-body py-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="meta mb-1">
+              <strong class="text-dark">{{ comment.author.username }}</strong>
+              {% if comment.author_id == post.owner_id %}<span class="badge badge-soft">автор</span>{% endif %}
+              · {{ comment.date_added|date:"j E Y, H:i" }}
+            </div>
+            {% if comment.id in can_delete %}
+              <form method="post" action="{% url 'blogs:comment_delete' comment.id %}"
+                    onsubmit="return confirm('Удалить комментарий?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-danger p-0" aria-label="Удалить комментарий">Удалить</button>
+              </form>
+            {% endif %}
+          </div>
+          <div class="entry-text">{{ comment.text }}</div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="meta">Комментариев пока нет.</p>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'blogs:comment_add' post.id %}" class="card mt-3" novalidate>
+        <div class="card-body">
+          {% csrf_token %}
+          {% bootstrap_form comment_form %}
+          {% bootstrap_button 'Отправить' button_type='submit' button_class='btn-primary' %}
+        </div>
+      </form>
+    {% else %}
+      <p class="meta mt-3"><a href="{% url 'users:login' %}?next={{ request.path|urlencode }}">Войдите</a>, чтобы оставить комментарий.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+</div></div>
+{% endblock content %}
